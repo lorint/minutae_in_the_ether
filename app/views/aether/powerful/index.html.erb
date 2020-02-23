@@ -1,0 +1,87 @@
+<style>
+	#bg-video {
+		position: fixed;
+		top: 0; left: 0;
+		min-width: 100%; 
+		min-height: 100%;
+	}
+	#content {
+		position: fixed;
+		top: 5%; left: 5%;
+		/*background: rgba(0, 0, 0, 0.5);*/
+		/*border: 5px solid red;*/
+		color: #f1f1f1;
+		width: 90%;
+		height: 90%;
+		text-align: center;
+	}
+	#what-powerful {
+		font-size: 64px;
+		font-family: Arial Black;
+	}
+	#share-thoughts {}
+	#fears {
+		position: relative;
+		background: rgba(0, 0, 0, 0.5);
+		top: 3%;
+		left: 15%;
+		width: 70%;
+		border: 3px solid black;
+		text-align: left;
+	}
+	#new-fear {
+		border: 3px solid blue;
+	}
+	#btn-not-afraid {
+		float: right;
+		display: none;
+	}
+</style>
+
+<!--
+ffmpeg -i /Users/lorin/Downloads/Ambient_Sc -ss 00:05:58 -to 00:08:22 -c:v copy -an scary.mp4
+-->
+<video autoplay muted loop id="bg-video"><source src="https://wgc-radness.s3.eu-west-2.amazonaws.com/scary.mp4" type="video/mp4"></video>
+
+<div id="content">
+	<div id="what-powerful">What makes you feel powerful?</div>
+
+	<div id="share-thoughts">Thinking back on your journey of life, what things have given you enough satisfaction to feel almost invincible?</div>
+	<div id="fears">
+		<div id="prev-fears"></div>
+		<div id="new-fear" contenteditable="true"></div>
+	</div>
+	<input type="button" value="Proceed ->>" id="btn-afraid" />
+</div>
+
+<script>
+	var userFears = <%= @user_powerful.to_json.html_safe %> || [];
+	var otherFears = <%= @other_powerful.to_json.html_safe %> || [];
+	var prevFears = document.getElementById("prev-fears");
+	userFears.forEach(addFear);
+	var newFear = document.getElementById("new-fear");
+	var btnNotAfraid = document.getElementById("btn-not-afraid");
+	newFear.focus();
+	newFear.addEventListener("keypress", function (evt) {
+		if (evt.keyCode === 13) {
+			newFearJson = {name: newFear.innerHTML};
+			addFear(newFearJson);
+			// App.fears.perform("update", newFearJson);
+			$.post("/aether/powerful", newFearJson, function(){});
+			newFear.innerHTML = "";
+			evt.preventDefault();
+		}
+	});
+
+	function addFear (fear) {
+		var freshFear = document.createElement("DIV");
+		freshFear.innerHTML = fear.name;
+		prevFears.appendChild(freshFear);
+		if (prevFears.childElementCount >= 5) {
+			newFear = document.getElementById("new-fear");
+			newFear.style.display = "none";
+			btnNotAfraid = document.getElementById("btn-not-afraid");
+			btnNotAfraid.style.display = "block";
+		}
+	}
+</script>
